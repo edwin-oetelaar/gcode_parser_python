@@ -101,7 +101,10 @@ class myLexer(object):
               'COMMENTSTART', 'BODY', 'COMMENTEND',
               'WORD',  # letter M G X Y Z etc etc
               'BODY2',  # body van comment ';' met EOL
+              'BODY3',  # body van comment M117 met EOL
               'COMMENT2END',  # token van comment EOL einde
+              'COMMENT3END',  # token van comment EOL einde
+              'M117',  # een comment met M117 start
               )
 
     # A string containing ignored characters (spaces and tabs)
@@ -120,6 +123,7 @@ class myLexer(object):
     # together will any other rules which are not constrained by start-conditions.
     states = (('comment', 'inclusive'),  # tussen haakjes ( comment )
               ('comment2', 'inclusive'),  # ';' comment
+              ('comment3', 'inclusive'),  # een M117 comment tot EOL
               )
 
     def __init__(self):
@@ -190,6 +194,23 @@ class myLexer(object):
         r'[\n]'
         t.lexer.pop_state()
         t.type = 'COMMENT2END'  # return this instead of EOL
+        return t
+
+    def t_comment3(self, t):
+        r'[mM]117'
+        t.lexer.push_state('comment3')
+        t.type = 'M117'
+        return t
+
+    def t_comment3_BODY3(self, t):
+        r'[^\n]+'
+        # anything ignored inside comment3 state
+        return t
+
+    def t_comment3_EOL(self, t):
+        r'[\n]'
+        t.lexer.pop_state()
+        t.type = 'COMMENT3END'  # return this instead of EOL
         return t
 
     def t_WORD(self, t):
@@ -302,6 +323,13 @@ class myParser(object):
         print('handle comment : {c}'.format(c=p[2]))
         pass
 
+    def p_comment3eol(self, p):
+        """commenteol : M117 COMMENT3END
+                      | M117 BODY3 COMMENT3END"""
+
+        print('handle comment m117 : {c}'.format(c=p[2]))
+        pass
+
     def p_opt_words(self, p):
         """opt_words : empty
                      | words
@@ -387,7 +415,7 @@ if __name__ == '__main__':
 
     default_mcode_at_start = ''
 
-    files = ('test_data/test_data1.nc',)
+    files = ('test_data/laser_output.nc', 'test_data/test_data1.nc',)
 
     m = myLexer()
     m.build()
