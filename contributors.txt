@@ -1,2 +1,10 @@
+The hackers working on this little test:
+
 Edwin Oetelaar, van den
 Ben Zijlstra
+
+This code is python 3.4 compatible and works with the PLY module
+
+install like so :  $ sudo pip3.4 install ply
+or install in your virtualenv if you like
+
